@@ -282,3 +282,5 @@ _build/
 
 # Sphinx documentation
 docs/_build/
+# TensorBoard training logs (runs directory)
+runs/

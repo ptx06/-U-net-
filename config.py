@@ -4,18 +4,18 @@ y_path = './data/matte'          # 标签掩膜文件夹
 model_path = './savemodel/unet_model.ckpt'   # 模型保存路径
 
 # 预处理参数
-img_size = (160, 160)            # 仅作参考，实际缩放由img_scale控制
-img_scale = 0.1                   # 缩放比例（例如原图1000x1000 -> 100x100）
-batch_size = 1
-num_workers = 0
+img_size = (160, 160)
+img_scale = 1.0                  # 提升分辨率，保留更多细节
+batch_size = 16                   # 充分利用RTX 4090显存
+num_workers = 8                   # 加速数据加载
 
 # 模型参数
-n_classes = 1                     # 二分类（人像/背景）
-use_dice = False                  # 是否使用Dice Loss（PPT中dice=None）
+n_classes = 1
+use_dice = True                   # 开启Dice Loss，提升分割效果
 
 # 训练参数
-lr = 1e-4
-opt = 'SGD'                       # 可选 'SGD' 或 'RMSprop'
-momentum = 0.99
-weight_decay = 1e-8
+lr = 2e-4                        # batch_size提升后适当提高学习率
+opt = 'SGD'
+momentum = 0.9                   # 降低momentum，稳定训练
+weight_decay = 1e-5              # 增强正则化，防止过拟合
 epochs = 50

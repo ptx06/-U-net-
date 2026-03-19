@@ -39,19 +39,47 @@ class BasicDataset(Dataset):
     @staticmethod
     def preprocess(pil_img, scale, is_mask):
         w, h = pil_img.size
-        newW, newH = int(scale * w), int(scale * h)
+        
+        # 使用固定尺寸而不是比例缩放，确保所有图像尺寸一致
+        if scale < 1.0:
+            # 如果使用比例缩放，计算新尺寸
+            newW, newH = int(scale * w), int(scale * h)
+        else:
+            # 使用固定尺寸（例如160x160）
+            newW, newH = 160, 160
+            
         assert newW > 0 and newH > 0, 'Scale is too small, resized images would have no pixel'
+        
         # 对掩膜使用最近邻插值，对原图使用双三次插值
         pil_img = pil_img.resize((newW, newH), resample=Image.NEAREST if is_mask else Image.BICUBIC)
+        
+        # 如果是RGBA图像（4通道），转换为RGB（3通道）
+        if pil_img.mode == 'RGBA' and not is_mask:
+            pil_img = pil_img.convert('RGB')
+        
         img_ndarray = np.asarray(pil_img)
 
-        if not is_mask:
+        if is_mask:
+            # 掩码处理：确保是单通道
+            if img_ndarray.ndim == 3:
+                # 如果是RGB图像，转换为灰度图
+                img_ndarray = img_ndarray.mean(axis=2).astype(np.uint8)
+            # 掩码只需要一个通道
+            img_ndarray = img_ndarray[np.newaxis, ...]  # (H, W) -> (1, H, W)
+        else:
+            # 图像处理：确保所有图像都是3通道
             if img_ndarray.ndim == 2:
                 # 灰度图转为 (C, H, W)
                 img_ndarray = img_ndarray[np.newaxis, ...]
             else:
                 # 彩色图 (H, W, C) -> (C, H, W)
                 img_ndarray = img_ndarray.transpose((2, 0, 1))
+                
+                # 如果通道数不是3，转换为3通道
+                if img_ndarray.shape[0] == 4:  # RGBA -> RGB
+                    img_ndarray = img_ndarray[:3, :, :]
+                elif img_ndarray.shape[0] == 1:  # 单通道 -> 3通道
+                    img_ndarray = np.repeat(img_ndarray, 3, axis=0)
 
         # 归一化到 [0, 1]
         img_ndarray = img_ndarray / 255.0
@@ -77,6 +105,6 @@ class BasicDataset(Dataset):
             mask = mask[np.newaxis, ...]
 
         return {
-            'image': torch.as_tensor(img.copy()).float().contiguous(),
-            'mask': torch.as_tensor(mask.copy()).long().float().contiguous()
+            'image': torch.from_numpy(img.copy()).float().contiguous(),
+            'mask': torch.from_numpy(mask.copy()).float().contiguous()
         }

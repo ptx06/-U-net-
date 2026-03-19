@@ -1,10 +1,13 @@
+import os
+# 修复OMP_NUM_THREADS警告
+os.environ['OMP_NUM_THREADS'] = '1'
+
 import config
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
-import os
 from pathlib import Path
 from unet import UNet
 from data_loading import BasicDataset
