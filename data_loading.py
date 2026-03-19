@@ -64,17 +64,24 @@ class BasicDataset(Dataset):
 
         if not is_mask:
             if img_ndarray.ndim == 2:
-                # 灰度图转为 (C, H, W)
+                # 灰度图转为 (C, H, W) 并复制为3通道
                 img_ndarray = img_ndarray[np.newaxis, ...]
+                img_ndarray = np.repeat(img_ndarray, 3, axis=0)
             else:
                 # 彩色图 (H, W, C) -> (C, H, W)
                 img_ndarray = img_ndarray.transpose((2, 0, 1))
                 
-                # 如果通道数不是3，转换为3通道
-                if img_ndarray.shape[0] == 4:  # RGBA -> RGB
-                    img_ndarray = img_ndarray[:3, :, :]
-                elif img_ndarray.shape[0] == 1:  # 单通道 -> 3通道
+                # 确保所有图像都是3通道
+                if img_ndarray.shape[0] == 1:  # 单通道 -> 3通道
                     img_ndarray = np.repeat(img_ndarray, 3, axis=0)
+                elif img_ndarray.shape[0] == 4:  # RGBA -> RGB
+                    img_ndarray = img_ndarray[:3, :, :]
+                elif img_ndarray.shape[0] != 3:  # 其他通道数 -> 3通道
+                    # 取前3个通道或复制第一个通道
+                    if img_ndarray.shape[0] > 3:
+                        img_ndarray = img_ndarray[:3, :, :]
+                    else:
+                        img_ndarray = np.repeat(img_ndarray[:1, :, :], 3, axis=0)
 
         img_ndarray = img_ndarray / 255.0
         return img_ndarray
