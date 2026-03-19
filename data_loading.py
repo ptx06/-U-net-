@@ -47,7 +47,14 @@ class BasicDataset(Dataset):
             newW, newH = 160, 160
             
         assert newW > 0 and newH > 0, 'Scale is too small, resized images would have no pixel'
+        
+        # 对掩膜使用最近邻插值，对原图使用双三次插值
         pil_img = pil_img.resize((newW, newH), resample=Image.NEAREST if is_mask else Image.BICUBIC)
+        
+        # 如果是RGBA图像（4通道），转换为RGB（3通道）
+        if pil_img.mode == 'RGBA' and not is_mask:
+            pil_img = pil_img.convert('RGB')
+        
         img_ndarray = np.asarray(pil_img)
 
         # ========== 新增处理：若掩膜是彩色图（3通道），转换为单通道（取第一个通道） ==========
@@ -57,9 +64,17 @@ class BasicDataset(Dataset):
 
         if not is_mask:
             if img_ndarray.ndim == 2:
+                # 灰度图转为 (C, H, W)
                 img_ndarray = img_ndarray[np.newaxis, ...]
             else:
+                # 彩色图 (H, W, C) -> (C, H, W)
                 img_ndarray = img_ndarray.transpose((2, 0, 1))
+                
+                # 如果通道数不是3，转换为3通道
+                if img_ndarray.shape[0] == 4:  # RGBA -> RGB
+                    img_ndarray = img_ndarray[:3, :, :]
+                elif img_ndarray.shape[0] == 1:  # 单通道 -> 3通道
+                    img_ndarray = np.repeat(img_ndarray, 3, axis=0)
 
         img_ndarray = img_ndarray / 255.0
         return img_ndarray
