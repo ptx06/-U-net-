@@ -98,7 +98,11 @@ class BasicDataset(Dataset):
         if mask.ndim == 2:
             mask = mask[np.newaxis, ...]
 
+        # 确保使用numpy数组创建tensor，避免存储问题
+        image_tensor = torch.from_numpy(np.ascontiguousarray(img)).float()
+        mask_tensor = torch.from_numpy(np.ascontiguousarray(mask)).float()
+        
         return {
-            'image': torch.tensor(img, dtype=torch.float32),
-            'mask': torch.tensor(mask, dtype=torch.float32)
+            'image': image_tensor,
+            'mask': mask_tensor
         }
