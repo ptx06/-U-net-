@@ -99,6 +99,6 @@ class BasicDataset(Dataset):
             mask = mask[np.newaxis, ...]
 
         return {
-            'image': torch.from_numpy(img.copy()).float(),
-            'mask': torch.from_numpy(mask.copy()).float()
+            'image': torch.tensor(img, dtype=torch.float32),
+            'mask': torch.tensor(mask, dtype=torch.float32)
         }
