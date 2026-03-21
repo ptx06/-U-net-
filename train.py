@@ -48,7 +48,8 @@ dir_img = Path(config.X_path)
 dir_mask = Path(config.y_path)
 dataset = BasicDataset(dir_img, dir_mask, config.img_scale)
 train_loader = DataLoader(dataset, batch_size=config.batch_size,
-                          shuffle=True, num_workers=config.num_workers)
+                          shuffle=True, num_workers=config.num_workers,
+                          pin_memory=False, persistent_workers=False)
 
 global_step = 0
 

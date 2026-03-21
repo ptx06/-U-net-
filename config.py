@@ -6,8 +6,8 @@ model_path = './savemodel/unet_model.ckpt'   # 模型保存路径
 # 预处理参数
 img_size = (160, 160)
 img_scale = 1.0                  # 提升分辨率，保留更多细节
-batch_size = 16                   # 充分利用RTX 4090显存
-num_workers = 8                   # 加速数据加载
+batch_size = 1                   # 充分利用RTX 4090显存
+num_workers = 0                   # 临时设置为0，避免多进程问题
 
 # 模型参数
 n_classes = 1

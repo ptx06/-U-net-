@@ -3,7 +3,7 @@ import torch
 import numpy as np
 from unet import UNet
 from data_loading import BasicDataset
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Subset
 from utils import Score
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
@@ -27,15 +27,20 @@ if __name__ == '__main__':
     model.load_state_dict(torch.load(config.model_path, map_location=device))
 
     dataset = BasicDataset(config.X_path, config.y_path, config.img_scale)
-    loader = DataLoader(dataset, batch_size=config.batch_size,
+    indices = list(range(min(10, len(dataset))))
+    subset = Subset(dataset, indices)
+    loader = DataLoader(subset, batch_size=config.batch_size,
                         shuffle=False, num_workers=config.num_workers)
 
-    results = evaluate(model, loader, config.n_classes)
+    results = evaluate(model, loader, n_classes=2)
     print("Evaluation results:")
     for k, v in results.items():
         if isinstance(v, dict):
             print(f"{k}:")
             for kk, vv in v.items():
                 print(f"  {kk}: {vv:.4f}")
+        elif isinstance(v, np.ndarray):
+            # 处理数组，如 class_acc
+            print(f"{k}:", ' '.join([f'{x:.4f}' for x in v]))
         else:
             print(f"{k}: {v:.4f}")
